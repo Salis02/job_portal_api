@@ -42,10 +42,27 @@ func (r *Repo) GetUserById(ctx context.Context, id string) (name, email string, 
 }
 
 // Refresh token
-func (r *Repo) storeRefreshToken(ctx context.Context, userID, tokenHash, userAgent, ip string, expiresAt time.Time) error {
+func (r *Repo) StoreRefreshToken(ctx context.Context, userID, tokenHash, userAgent, ip string, expiresAt time.Time) error {
 	_, err := r.db.Exec(ctx, `
 		INSERT INTO refresh_tokens (id, user_id, token_hash, user_agent, ip_address, expires_at, created_at)
 		VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, NOW())
 	`, userID, tokenHash, userAgent, ip, expiresAt)
 	return err
+}
+
+func (r *Repo) RevokeRefreshToken(ctx context.Context, tokenHash string) error {
+	_, err := r.db.Exec(ctx, `
+		UPDATE refresh_tokens SET revoked = true WHERE token_hash = $1
+	`, tokenHash)
+	return err
+}
+
+// Validate refresh token exists, not revoked and not expired
+func (r *Repo) ValidateRefreshToken(ctx context.Context, tokenHash string) (userID string, err error) {
+	row := r.db.QueryRow(ctx, `
+		SELECT user_id FROM refresh_tokens
+		WHERE token_hash = $1 AND revoked = false AND expires_at > NOW()
+	`, tokenHash)
+	err = row.Scan(&userID)
+	return
 }
