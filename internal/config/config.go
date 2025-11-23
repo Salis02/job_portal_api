@@ -2,43 +2,39 @@ package config
 
 import (
 	"log"
+	"os"
 
-	"github.com/spf13/viper"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	AppEnv  string
 	AppPort string
-	DB DBConfig
+	DBHost  string
+	DBPort  string
+	DBUser  string
+	DBPass  string
+	DBName  string
 }
 
-type DBConfig struct {
-	Host string
-	User string
-	Pass string
-	Name string
-	Port string
-	SSL string
+func Load() *Config {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println(".env not found, using system environment")
+	}
+
+	return &Config{
+		AppPort: getEnv("APP_PORT", "8080"),
+		DBHost:  getEnv("DB_HOST", "localhost"),
+		DBPort:  getEnv("DB_PORT", "5432"),
+		DBUser:  getEnv("DB_USER", "postgres"),
+		DBPass:  getEnv("DB_PASSWORD", "root"),
+		DBName:  getEnv("DB_NAME", "job_portal"),
+	}
 }
 
-func LoadConfig()(*Config, error){
-	viper.SetConfigFile(".env")
-	if err := viper.ReadInConfig(); err != nil {
-		log.Fatal("Error loading .env files:", err)
+func getEnv(key string, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
 	}
-
-	config := &Config{
-		AppEnv: viper.GetString("APP_ENV"),
-		AppPort: viper.GetString("APP_PORT"),
-		DB: DBConfig{
-			Host: viper.GetString("DB_HOST"),
-			User: viper.GetString("DB_USER"),
-			Pass: viper.GetString("DB_PASS"),
-			Name: viper.GetString("DB_NAME"),
-			Port: viper.GetString("DB_PORT"),
-			SSL: viper.GetString("DB_SSL"),
-		},
-	}
-
-	return config, nil
+	return fallback
 }

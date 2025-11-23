@@ -1,0 +1,15 @@
+DROP TABLE IF EXISTS audit_logs;
+
+DROP TABLE IF EXISTS job_apply_logs;
+
+DROP TABLE IF EXISTS job_views;
+
+DROP TABLE IF EXISTS job_applications;
+
+DROP TABLE IF EXISTS jobs;
+
+DROP TABLE IF EXISTS companies;
+
+DROP TABLE IF EXISTS job_categories;
+
+DROP TABLE IF EXISTS users;
